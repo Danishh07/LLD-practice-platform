@@ -1,0 +1,130 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-bottom: var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.headerTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.title {
+  font-size: var(--fs-xl);
+}
+
+.difficulty {
+  flex-shrink: 0;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-ink-muted);
+}
+
+.difficulty[data-difficulty='Easy'] {
+  color: var(--color-success);
+  border-color: var(--color-success);
+}
+
+.difficulty[data-difficulty='Medium'] {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.difficulty[data-difficulty='Hard'] {
+  color: var(--color-warning);
+  border-color: var(--color-warning);
+}
+
+.statement {
+  max-width: 70ch;
+  color: var(--color-ink-muted);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.sectionTitle {
+  font-size: var(--fs-md);
+}
+
+.requirementList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.requirementItem {
+  position: relative;
+  padding-left: var(--space-4);
+  max-width: 65ch;
+}
+
+.requirementItem::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.6em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-accent);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.startButton {
+  align-self: flex-start;
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-sm);
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+  font-weight: 600;
+}
+
+.startButton:hover {
+  text-decoration: none;
+  opacity: 0.92;
+}
+
+.historyButton {
+  align-self: flex-start;
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-ink);
+  font-weight: 600;
+}
+
+.historyButton:hover {
+  text-decoration: none;
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+@media (max-width: 480px) {
+  .actions {
+    flex-direction: column;
+  }
+}

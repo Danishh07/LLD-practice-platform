@@ -1,0 +1,53 @@
+/*
+  Design tokens for the LLD Practice Platform.
+
+  Rationale (for the interview): this is a schematic/blueprint palette,
+  not a marketing one — cool paper background, ink text, a single
+  confident "blueprint blue" accent reserved for interactive/primary
+  moments, plus a success/warning pair for evaluation feedback later.
+  A monospace type is used for anything that reads like a class or
+  method name, because that's functionally what it is, not decoration.
+*/
+
+:root {
+  /* Color */
+  --color-bg: #f5f6f8;
+  --color-surface: #ffffff;
+  --color-ink: #1a1d23;
+  --color-ink-muted: #565c68;
+  --color-border: #d8dbe2;
+  --color-accent: #3454d1;
+  --color-accent-ink: #ffffff;
+  --color-success: #2e8b57;
+  --color-warning: #c1440e;
+
+  /* Type */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --fs-sm: 0.875rem;
+  --fs-base: 1rem;
+  --fs-md: 1.125rem;
+  --fs-lg: 1.5rem;
+  --fs-xl: 2rem;
+
+  --lh-base: 1.55;
+
+  /* Spacing — 4px scale, used for every margin/padding/gap */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  /* Layout */
+  --content-max-width: 840px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+
+  /* Motion */
+  --transition-fast: 120ms ease;
+}
