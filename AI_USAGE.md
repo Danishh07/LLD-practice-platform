@@ -1,137 +1,289 @@
 # AI Usage
 
-AI tooling (Claude) was used throughout this project's development —
-for planning, code generation, and documentation drafting — under
-explicit, phase-by-phase constraints set by the developer (Dan). This
-document records real decisions from that process: what was proposed,
-what was actually built, and why. Nothing below is invented after the
-fact; every AI-assisted output was reviewed, tested, and in some cases
-rejected or reworked before being accepted.
+AI tooling (primarily Claude) was used throughout the development of
+this project for architecture planning, implementation assistance,
+testing ideas, edge-case analysis, and documentation drafting.
+
+AI was used as a development assistant rather than as an autonomous
+builder. The project scope, architecture constraints, technology
+choices, and final engineering decisions were reviewed and controlled
+throughout development. AI-generated suggestions and code were tested
+before being incorporated, and several suggestions were modified or
+deliberately rejected.
+
+This document records five meaningful AI-assisted decisions from the
+development process.
 
 ---
 
-### Decision 1: Evaluation architecture — deterministic rules vs. live LLM grading
+## Decision 1: Evaluation Architecture — Deterministic Rules vs. Live LLM Grading
 
-**What was being designed:** How submitted designs get scored.
+### What was being designed
 
-**AI suggestion:** During planning, a rule-based checklist evaluator
-was proposed as the primary MVP approach, with a live LLM-based
-qualitative reviewer suggested only as an optional stretch goal layered
-on top — explicitly flagged as riskier for a 2-day timeline (network
-dependency, non-determinism, harder to test).
+The main question was how learner-submitted LLD designs should be
+evaluated and how useful feedback could be generated within the
+two-day MVP constraint.
 
-**Final decision:** A fully deterministic, rule-based evaluator
-(`evaluationService.js`), with no live LLM grading at all — the
-optional stretch layer was never built.
+### AI Suggestion
 
-**Reason:** Determinism and testability mattered more than the
-richer-but-fuzzier feedback an LLM grader might give. A rule-based
-evaluator can be unit-tested exhaustively (see the 8 tests in
-`evaluationService.test.js`), never depends on network availability or
-an API key, and every score is explainable in an interview by pointing
-at the exact rule that produced it. This was a requirement set by the
-developer for every phase, not just a preference — later phases
-explicitly re-stated "do not implement live AI/LLM grading."
+A rule-based checklist evaluator was proposed as the primary MVP
+approach. A live LLM-based qualitative reviewer was also considered as
+a possible future or stretch layer.
 
----
+The LLM approach could provide richer semantic feedback, but it would
+introduce network dependency, API-key requirements, non-deterministic
+responses, additional latency, and more difficult testing.
 
-### Decision 2: Extensibility scoring — keywords vs. structural evidence
+### Final Decision
 
-**What was being designed:** How the Extensibility category (15 of
-100 points) gets scored.
+The project uses a fully deterministic, rule-based evaluator in
+`src/services/evaluationService.js`.
 
-**AI suggestion:** An early draft of the scoring approach leaned on
-checking whether the learner's explanation mentioned relevant terms
-(e.g. "strategy", "interface", "abstract") from each problem's
-`extensibilitySignals` list.
+A live LLM grading service was deliberately not implemented.
 
-**Final decision:** Extensibility is split into three sub-signals —
-structural evidence in the submitted design (primarily an actual
-Inheritance relationship, worth up to 7 of the 15 points), whether the
-explanation's language is *corroborated* by that structure (full
-credit only when both agree; a keyword with no supporting structure
-gets just 1 point), and general depth of reasoning independent of any
-specific keyword.
+### Reason
 
-**Reason:** The developer explicitly rejected keyword-only scoring —
-"do not give full points merely because the explanation contains words
-like 'strategy', 'interface', or 'extensible'" — because it's trivial
-to game and doesn't actually measure whether the design is
-extensible. Requiring structural corroboration makes the score reflect
-the design, not just the vocabulary used to describe it.
+Determinism and testability were more valuable for the core MVP than
+richer but less predictable AI-generated grading.
+
+The rule-based evaluator:
+
+- produces repeatable scores
+- has explainable scoring rules
+- requires no external API
+- has no API cost per submission
+- works without network connectivity
+- can be directly unit-tested
+- allows feedback to be traced back to specific rules
+
+An LLM-based qualitative reviewer remains a potential future extension
+rather than part of the current MVP.
 
 ---
 
-### Decision 3: localStorage data model — one key vs. one key per problem
+## Decision 2: Extensibility Scoring — Keywords vs. Structural Evidence
 
-**What was being designed:** How attempts persist in `localStorage`.
+### What was being designed
 
-**AI suggestion:** A per-problem key scheme (e.g. `lld_attempts_
-parking-lot`) was one option considered early on, since it makes
-"get all attempts for this problem" a single direct read with no
-filtering step.
+The evaluator needed to determine whether a learner's design showed
+evidence of extensibility.
 
-**Final decision:** A single `lld_attempts` key holding one JSON array
-of all attempts across all problems, filtered by `problemId` at read
-time in `storageService.getAttemptsByProblemId()`.
+### AI Suggestion
 
-**Reason:** A single key is simpler to reason about and matches the
-explicit requirement ("Use ONE localStorage key only"). It also avoids
-a class of bugs the per-key scheme invites — forgetting to create a
-new key for a 5th problem, or migrating data if a problem's id ever
-changed — at the cost of one `.filter()` call per read, which is
-negligible at MVP scale.
+An early approach considered checking whether the learner's explanation
+contained terms such as "strategy", "interface", "abstract", or
+"extensible", based on each problem's configured
+`extensibilitySignals`.
 
----
+### Final Decision
 
-### Decision 4: When to extract shared result-display components
+Keyword presence is not sufficient for full extensibility credit.
 
-**What was being designed:** How `EvaluationResultPage` (Phase 4) and
-the later `AttemptDetailPage` (Phase 5) share their score/feedback/
-submitted-design display.
+The final evaluator combines:
 
-**AI suggestion:** During Phase 4, the read-only "submitted design"
-block was kept as a page-local component inside
-`EvaluationResultPage.jsx` rather than a shared component, since it
-had exactly one consumer — pulling it into `src/components/` at that
-point would have been abstraction with no second user to justify it.
+1. Structural evidence in the submitted design
+2. Relationships and class organization
+3. Supporting explanation
+4. Problem-specific evaluation signals
+5. General reasoning depth
 
-**Final decision:** In Phase 5, once `AttemptDetailPage` needed the
-identical display, `SubmittedDesign`, `FeedbackListSection`, and
-`CategoryScoreGrid` were extracted into `src/components/` and both
-pages were refactored to import them.
+For example, an explanation containing words such as "strategy" or
+"interface" without supporting classes or relationships receives only
+limited credit.
 
-**Reason:** Extracting a shared component pays off once there are two
-real consumers, not in anticipation of one. Building it shared from
-the start in Phase 4 would have been guessing at an API before a
-second use case existed to validate it; extracting once Phase 5
-actually needed it kept both the Phase 4 and Phase 5 code honest about
-what it needed at the time.
+### Reason
+
+Keyword-only scoring would be easy to game and would not reliably show
+that a design is actually extensible.
+
+The final approach therefore makes structural evidence the primary
+signal and uses the written explanation as supporting evidence.
+
+This provides a better balance between simplicity and meaningful
+evaluation for a two-day MVP.
 
 ---
 
-### Decision 5: Testing strategy for localStorage-dependent code
+## Decision 3: localStorage Data Model — One Key vs. One Key per Problem
 
-**What was being designed:** How to unit-test `storageService.js`
-and, later, the history/detail pages that depend on it.
+### What was being designed
 
-**AI suggestion:** Two options were on the table for giving Vitest a
-`localStorage` to test against: install `jsdom` as a dependency and
-configure it as the test environment, or write a small in-memory
-`localStorage` stand-in by hand.
+The application needed to persist learner attempts without a backend.
 
-**Final decision:** Phase 4 used a ~15-line hand-written
-`FakeLocalStorage` class (get/set/remove/clear backed by a plain
-object) for `storageService.test.js`, with no `jsdom` dependency at
-all. `jsdom` and `@testing-library/react` were only added in Phase 5,
-and only for the two page-level tests that genuinely need to render
-and query real DOM output (`AttemptHistoryPage.test.jsx`,
-`AttemptDetailPage.test.jsx`) — applied per-file via a
-`// @vitest-environment jsdom` comment, not project-wide.
+### AI Suggestion
 
-**Reason:** `storageService.js` only ever calls `getItem`/`setItem`/
-`removeItem`/`clear` — a full jsdom browser environment would have
-been a large dependency to satisfy a tiny interface. Keeping the
-service-layer tests on Vitest's default Node environment keeps them
-fast, and scoping jsdom to only the files that render components means
-the rest of the suite doesn't pay that cost.
+A per-problem key scheme was considered, for example:
+
+`lld_attempts_parking-lot`
+
+This would allow direct retrieval of attempts for an individual
+problem.
+
+### Final Decision
+
+The application uses a single localStorage key:
+
+`lld_attempts`
+
+All attempts are stored as one JSON array and filtered by
+`problemId` when problem-specific history is requested.
+
+### Reason
+
+A single key keeps the persistence model simpler and matches the MVP
+requirement to use one localStorage key.
+
+It also makes the storage service easier to reason about and avoids
+maintaining a growing collection of problem-specific keys.
+
+At the scale of this MVP, filtering the array in memory is negligible
+and keeps the implementation straightforward.
+
+---
+
+## Decision 4: Extracting Shared Result Components
+
+### What was being designed
+
+The result page and historical attempt detail page both need to display
+scores, feedback, and the learner's submitted design.
+
+### AI Suggestion
+
+During the initial result-page implementation, the submitted-design
+display was kept local to `EvaluationResultPage` because it had only
+one consumer at that point.
+
+### Final Decision
+
+When `AttemptDetailPage` introduced a second real use case, the common
+display logic was extracted into reusable components such as:
+
+- `SubmittedDesign`
+- `FeedbackListSection`
+- `CategoryScoreGrid`
+
+Both result and historical-detail pages now use these shared
+components.
+
+### Reason
+
+The project intentionally avoids premature abstraction.
+
+Creating shared components before a second use case existed would have
+required designing a reusable API based on assumptions. Waiting until
+the second consumer appeared provided a concrete reason for extraction
+and resulted in simpler component interfaces.
+
+This approach keeps the codebase small while still avoiding meaningful
+duplication where reuse is actually justified.
+
+---
+
+## Decision 5: Testing Strategy for localStorage and React Pages
+
+### What was being designed
+
+The project needed tests for both the storage service and React pages
+that depend on browser APIs and DOM rendering.
+
+### AI Suggestion
+
+Two approaches were considered for testing localStorage-dependent code:
+
+1. Use a browser-like environment such as jsdom.
+2. Create a small in-memory localStorage implementation for the service
+   tests.
+
+### Final Decision
+
+The storage service uses a small in-memory `FakeLocalStorage` in
+`storageService.test.js`.
+
+`jsdom` and `@testing-library/react` are used only for page-level tests
+that genuinely require DOM rendering:
+
+- `AttemptHistoryPage.test.jsx`
+- `AttemptDetailPage.test.jsx`
+
+The page tests opt into jsdom using Vitest's per-file environment
+directive rather than making jsdom the environment for the entire test
+suite.
+
+### Reason
+
+The storage service only requires a small localStorage interface for
+reading and writing persisted attempts. A full browser environment
+would therefore be unnecessary for those service-level tests.
+
+For actual React page tests, however, DOM rendering and querying are
+valuable, so Testing Library with jsdom was introduced where it
+provides real value.
+
+This keeps the test setup relatively lightweight while still testing
+the important UI behavior.
+
+---
+
+## AI-Assisted Development Process
+
+AI assistance was used across multiple stages of the project, including:
+
+- architecture planning
+- component and folder structure
+- implementation assistance
+- evaluation-engine design
+- edge-case identification
+- test-case planning
+- documentation drafting
+- final code-quality review
+
+The implementation was developed incrementally rather than through a
+single large generation request.
+
+The project was divided into phases, and each phase had explicit
+constraints such as:
+
+- no Tailwind CSS
+- no Redux
+- no backend or database
+- no authentication
+- no microservices
+- no HLD
+- no live LLM grading
+- exactly four LLD problems
+- deterministic evaluation
+- beginner-friendly and interview-explainable code
+
+Generated code was reviewed, tested, and manually verified before the
+project was considered complete.
+
+---
+
+## Verification
+
+The final implementation was verified through:
+
+- `npm run test`
+- `npm run build`
+- browser-based manual testing
+- responsive UI checks
+- incognito-browser testing
+- edge-case testing for malformed localStorage and submissions
+
+The final test suite contains **23 passing tests across 5 test files**.
+
+The production build also completes successfully.
+
+---
+
+## Summary
+
+AI was used as a development assistant throughout the project, but the
+final product reflects deliberate engineering trade-offs around scope,
+simplicity, determinism, testability, and explainability.
+
+The most significant decision was to use a deterministic rule-based
+evaluator instead of making live AI grading part of the core MVP.
+LLM-based qualitative feedback remains a possible future extension
+rather than a dependency of the current system.
