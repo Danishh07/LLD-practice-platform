@@ -53,6 +53,7 @@ immediate, specific, repeatable feedback instead of none.
 - Vitest
 - Testing Library (`@testing-library/react`)
 - Git/GitHub
+- Vercel
 
 ## User Flow
 
@@ -210,12 +211,16 @@ rendering is needed.
 
 ## AI Usage
 
-AI tools (Claude) were used throughout development — architecture
-planning, code generation, and drafting this documentation. Every
-AI-assisted suggestion was reviewed, tested, and in several cases
-rejected or modified by the developer before being accepted; nothing
-here was merged unreviewed. See [AI_USAGE.md](./AI_USAGE.md) for
-specific, documented decisions.
+AI tools (primarily Claude) were used throughout development for
+architecture planning, implementation assistance, code review,
+testing ideas, and documentation drafting.
+
+AI-generated suggestions and code were reviewed and tested before
+being incorporated into the project. Several suggestions were
+modified or deliberately rejected based on the assignment scope,
+simplicity, and engineering trade-offs.
+
+See [AI_USAGE.md](./AI_USAGE.md) for specific documented decisions.
 
 ## Known Limitations
 
@@ -248,6 +253,13 @@ where this could go next, not current features:
 
 ## Getting Started
 
+### Prerequisites
+
+- Node.js 18+
+- npm
+
+### Install
+
 ```bash
 npm install
 npm run dev
@@ -260,6 +272,9 @@ npm run build
 npm run test
 ```
 
+
 ## Deployment
 
-Not currently deployed. Run locally with the commands above.
+The application is deployed on Vercel.
+
+**[Open LLD Practice Platform](https://lld-practice-platform-five.vercel.app/)**
